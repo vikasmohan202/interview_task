@@ -24,9 +24,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String imageUrl = '';
 
   User? _currentUser;
   Uint8List? file;
+  bool isLoading = false;
 
   _selectImage(BuildContext parentContext) async {
     return showDialog(
@@ -41,6 +43,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
               onPressed: () async {
                 Navigator.pop(context);
                 Uint8List pickedFile = await pickImage(ImageSource.camera);
+                imageUrl =
+                    await uploadImageToStorage('posts', pickedFile, true);
                 setState(() {
                   file = pickedFile;
                 });
@@ -52,6 +56,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 Uint8List pickedFile = await pickImage(ImageSource.gallery);
+                imageUrl =
+                    await uploadImageToStorage('posts', pickedFile, true);
+
                 setState(() {
                   file = pickedFile;
                 });
@@ -80,23 +87,27 @@ class _AddPostScreenState extends State<AddPostScreen> {
         final data = userProfileSnapshot.data() as Map<String, dynamic>;
         nameController.text = data['username'];
         // profilePicUrlController.text = data['profilePicUrl'];
-        setState(() {
-        
-        });
+        setState(() {});
       }
     }
   }
 
   // adding image to firebase storage
   Future<String> uploadImageToStorage(
-    String childName,
-    Uint8List file,
-  ) async {
+      String childName, Uint8List file, bool isPost) async {
     // creating location to our firebase storage
 
-    Reference ref = FirebaseStorage.instance.ref().child(childName);
+    Reference ref = FirebaseStorage.instance
+        .ref()
+        .child(childName)
+        .child(_auth.currentUser!.uid);
 
     // putting in uint8list format -> Upload task like a future but not future
+    if (isPost) {
+      String id = const Uuid().v1();
+      ref = ref.child(id);
+    }
+
     UploadTask uploadTask = ref.putData(file);
 
     TaskSnapshot snapshot = await uploadTask;
@@ -108,25 +119,33 @@ class _AddPostScreenState extends State<AddPostScreen> {
     String description,
     Uint8List file,
     String username,
+    String imageurl,
   ) async {
+    setState(() {
+      isLoading = true;
+    });
     // asking uid here because we dont want to make extra calls to firebase auth when we can just get from our state management
     String res = "Some error occurred";
     try {
       String postId = const Uuid().v1();
-      String photoUrl = await uploadImageToStorage(
-        'posts',
-        file,
-      );
+      // String photoUrl = await uploadImageToStorage('posts', file, true);
       // creates unique id based on time
       Post post = Post(
         description: descriptionController.text,
         username: nameController.text,
-        postUrl: photoUrl,
+        postUrl: imageUrl,
       );
       _firestore.collection('posts').doc(postId).set(post.toJson());
       res = "success";
+      setState(() {
+        isLoading = false;
+      });
+      Navigator.of(context).pop(true);
     } catch (err) {
       res = err.toString();
+      setState(() {
+        isLoading = false;
+      });
     }
     return res;
   }
@@ -168,59 +187,62 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Upload Image'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              uploadPost(
-                  descriptionController.text, file!, nameController.text);
-            },
-            child: const Text('Post'),
-          ),
-        ],
-      ),
-      body: file == null
-          ? Center(
-              child: IconButton(
-                onPressed: () => _selectImage(context), // Use 'context' here
-                icon: Icon(Icons.upload),
-              ),
-            )
-          : Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      child: TextField(
-                        // controller: ,
-                        decoration: InputDecoration(
-                            hintText: 'Enter description here',
-                            labelText: 'Description'),
-                        maxLines: 8,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 45,
-                      width: 45,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(
-                              'https://images.unsplash.com/photo-1687530094695-194b203e6035?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2938&q=80',
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                )
+    return isLoading
+        ? CircularProgressIndicator()
+        : Scaffold(
+            appBar: AppBar(
+              title: Text('Upload Image'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    uploadPost(descriptionController.text, file!,
+                        nameController.text, imageUrl);
+                  },
+                  child: const Text('Post'),
+                ),
               ],
             ),
-    );
+            body: file == null
+                ? Center(
+                    child: IconButton(
+                      onPressed: () =>
+                          _selectImage(context), // Use 'context' here
+                      icon: Icon(Icons.upload),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.3,
+                            child: TextField(
+                              // controller: ,
+                              decoration: InputDecoration(
+                                  hintText: 'Enter description here',
+                                  labelText: 'Description'),
+                              maxLines: 8,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 150,
+                            width: 150,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: NetworkImage(
+                                    imageUrl,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+          );
   }
 }

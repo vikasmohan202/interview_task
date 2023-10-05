@@ -14,28 +14,28 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
-  String postId = const Uuid().v1();
-  int commentLen = 0;
-
   @override
   void initState() {
     super.initState();
-    getComments();
   }
 
-  void getComments() async {
-    try {
-      QuerySnapshot snap = await FirebaseFirestore.instance
-          .collection('posts')
-          .doc(widget.snap['postUrl'])
-          .collection('comments')
-          .get();
+  void deletePost(String postId) async {
+   
+    postId = postId.replaceAll('//', '/');
 
-      commentLen = snap.docs.length;
+    try {
+      // Reference the Firestore collection and document for the post
+      DocumentReference postRef =
+          FirebaseFirestore.instance.collection('posts').doc(postId);
+
+      // Delete the post document
+      await postRef.delete();
+
+      // Close the dialog or navigate to another screen as needed
+      Navigator.of(context).pop();
     } catch (e) {
-      print(e.toString(),);
+      print("Error deleting post: $e");
     }
-    setState(() {});
   }
 
   @override
@@ -89,8 +89,7 @@ class _PostCardState extends State<PostCard> {
                                 ]
                                     .map((e) => InkWell(
                                           onTap: () async {
-                                            // FirestoreMethods().deletePost(widget.snap['postId']);
-                                            // Navigator.of(context).pop();
+                                            deletePost(widget.snap['postUrl']);
                                           },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
@@ -173,34 +172,13 @@ class _PostCardState extends State<PostCard> {
                 //     style: Theme.of(context).textTheme.bodyText2,
                 //   ),
                 // ),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(
-                    top: 8,
-                  ),
-                  child: RichText(
-                    text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: widget.snap['username'],
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(
-                            text: ' ${widget.snap['description']}',
-                            style: TextStyle(fontWeight: FontWeight.w400),
-                          ),
-                        ]),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      'View all comments',
-                      style: const TextStyle(
-                        fontSize: 16,
-                      ),
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    ' ${widget.snap['description']}',
+                    style: const TextStyle(
+                      fontSize: 16,
                     ),
                   ),
                 ),
