@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:interview_task/screens/feed_screen.dart';
 import 'package:interview_task/screens/login_screen.dart';
 import 'package:interview_task/screens/signup_screen.dart';
+import 'package:interview_task/widgets/post_card.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home:LoginScreen(),
+      home:FeedScreen(),
       );
   }
 }
