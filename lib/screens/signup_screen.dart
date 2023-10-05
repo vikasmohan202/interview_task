@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:interview_task/resources/auth_methods.dart';
+import 'package:interview_task/screens/login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -84,6 +85,36 @@ class _SignupScreenState extends State<SignupScreen> {
               // },
               child: Text('Sign Up'),
             ),
+            SizedBox(height: 16),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    child: Text("Dont have an accout?"),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: (){
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return const LoginScreen();
+              }));
+                    },
+                    child: Container(
+                      child: Text(
+                        "Log in",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                      ),
+                    ),
+                  )
+                ],
+              )
           ],
         ),
       ),

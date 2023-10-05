@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:interview_task/resources/auth_methods.dart';
 import 'package:interview_task/screens/feed_screen.dart';
+import 'package:interview_task/screens/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -54,14 +55,38 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(height: 32.0),
             ElevatedButton(
               onPressed: loginUser,
-              // () {
-              //   // TODO: Add your login logic here
-              //   String email = _emailController.text;
-              //   String password = _passController.text;
-              //   print('Email: $email, Password: $password');
-              // },
               child: Text('Login'),
             ),
+            SizedBox(height: 32.0),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    child: Text("Dont have an accout?"),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return const SignupScreen();
+              }));
+                    },
+                    child: Container(
+                      child: Text(
+                        "Sign up.",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                      ),
+                    ),
+                  )
+                ],
+              )
           ],
         ),
       ),
